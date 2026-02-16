@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Tic-Tac-Toe Multiplayer</title>
+    <style>
+        body { font-family: Arial; text-align: center; margin: 50px; }
+        #board { display: grid; grid-template-columns: repeat(3, 100px);
+                 gap: 5px; margin: 20px auto; width: 310px; }
+        .cell { width: 100px; height: 100px; border: 2px solid #333;
+                font-size: 48px; cursor: pointer; background: #f0f0f0; }
+        .cell:hover { background: #e0e0e0; }
+        button { padding: 10px 20px; font-size: 16px; margin: 10px; }
+        #status { font-size: 24px; margin: 20px; }
+        #game-id { font-size: 14px; color: #666; }
+    </style>
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+</head>
+<body>
+    <h1>Tic-Tac-Toe Multiplayer</h1>
+    <div id="menu">
+        <button onclick="createGame()">Create Game</button>
+        <input id="join-input" placeholder="Enter Game ID">
+        <button onclick="joinGame()">Join Game</button>
+    </div>
+    <div id="game-id"></div>
+    <div id="status">Waiting...</div>
+    <div id="player-symbol" style="font-size: 20px; color: #333;"></div>
+    <button id="play-again" onclick="playAgain()" style="display:none;">Play Again</button>
+    <div id="board"></div>
+
+    <script>
+        const socket = io();
+        let gameId = null;
+        let mySymbol = null;
+        let currentTurn = 'X';
+
+        function createGame() {
+            socket.emit('create_game');
+        }
+
+        function joinGame() {
+            const id = document.getElementById('join-input').value;
+            socket.emit('join_game', {game_id: id});
+        }
+        socket.on('game_created', (data) => {
+    	    gameId = data.game_id;
+            mySymbol = data.symbol;
+            document.getElementById('game-id').innerText = 'Game Code: ' + gameId + ' (Share with friend!)';
+            document.getElementById('player-symbol').innerText = 'You are: ' + mySymbol;
+            document.getElementById('status').innerText = 'Waiting for opponent...';
+        });
+        socket.on('game_joined', (data) => {
+            mySymbol = data.symbol;
+    	    gameId = document.getElementById('join-input').value;
+    	    document.getElementById('player-symbol').innerText = 'You are: ' + mySymbol;
+	});
+
+        socket.on('start_game', () => {
+            document.getElementById('status').innerText = "X's turn";
+            createBoard();
+        });
+
+        socket.on('move_made', (data) => {
+            updateBoard(data.board);
+            currentTurn = data.turn;
+            document.getElementById('status').innerText = currentTurn + "'s turn";
+        });
+
+        socket.on('game_over', (data) => {
+    	    updateBoard(data.board);
+    	    if (data.winner === 'draw') {
+            document.getElementById('status').innerText = "It's a draw!";
+    	} else {
+       	    const youWon = data.winner === mySymbol;
+            document.getElementById('status').innerText = youWon ? "You win!" : "You lose!";
+    	}
+    	    document.getElementById('play-again').style.display = 'block';
+	});
+
+        function createBoard() {
+            const board = document.getElementById('board');
+            board.innerHTML = '';
+            for (let i = 0; i < 9; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'cell';
+                cell.onclick = () => makeMove(i);
+                board.appendChild(cell);
+            }
+        }
+
+        function makeMove(position) {
+            if (currentTurn === mySymbol) {
+                socket.emit('make_move', {game_id: gameId, position: position});
+            }
+        }
+
+        function updateBoard(board) {
+            const cells = document.querySelectorAll('.cell');
+            board.forEach((val, i) => {
+                cells[i].innerText = val;
+                if (val !== '') cells[i].style.cursor = 'default';
+            });
+        }
+
+	socket.on('game_reset', () => {
+    	    mySymbol = mySymbol === 'X' ? 'O' : 'X';
+    	    currentTurn = 'X';
+    	    document.getElementById('player-symbol').innerText = 'You are: ' + mySymbol;
+    	    document.getElementById('status').innerText = "X's turn";
+    	    document.getElementById('play-again').style.display = 'none';
+    	    createBoard();
+	});
+	function playAgain() {
+    	    socket.emit('reset_game', {game_id: gameId});
+	}
+    </script>
+</body>
+</html>
