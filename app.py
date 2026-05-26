@@ -5,10 +5,11 @@ from flask import request
 from prometheus_flask_exporter import PrometheusMetrics
 
 app = Flask(__name__)
-metrics = PrometheusMetrics(app)
-metrics.info('app_info', 'Tic-Tac-Toe Application', version='1.0')
 app.config['SECRET_KEY'] = 'your-secret-key'
 socketio = SocketIO(app, cors_allowed_origins="*")
+metrics = PrometheusMetrics(app)
+metrics.info('app_info', 'Tic-Tac-Toe Application', version='1.0')
+
 
 # Store active games
 games = {}
