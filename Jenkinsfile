@@ -20,11 +20,35 @@ pipeline {
             }
         }
         
-        stage('Deploy') {
+        stage('Deploy to Dev') {
             steps {
-                sh 'docker save tictactoe:${BUILD_NUMBER} > tictactoe.tar'
-                sh 'sudo microk8s ctr image import tictactoe.tar'
-                sh 'sudo microk8s kubectl set image deployment/tictactoe tictactoe=tictactoe:${BUILD_NUMBER}'
+                sh 'docker tag tictactoe:${BUILD_NUMBER} tictactoe:dev'
+                sh 'docker save tictactoe:dev > tictactoe-dev.tar'
+                sh 'sudo microk8s ctr image import tictactoe-dev.tar'
+                sh 'sudo microk8s kubectl apply -f k8s/environments/dev.yaml'
+                sh 'sudo microk8s kubectl rollout restart deployment/tictactoe -n dev'
+            }
+        }
+        
+        stage('Deploy to Staging') {
+            steps {
+                input message: 'Deploy to Staging?', ok: 'Yes'
+                sh 'docker tag tictactoe:${BUILD_NUMBER} tictactoe:staging'
+                sh 'docker save tictactoe:staging > tictactoe-staging.tar'
+                sh 'sudo microk8s ctr image import tictactoe-staging.tar'
+                sh 'sudo microk8s kubectl apply -f k8s/environments/staging.yaml'
+                sh 'sudo microk8s kubectl rollout restart deployment/tictactoe -n staging'
+            }
+        }
+        
+        stage('Deploy to Production') {
+            steps {
+                input message: 'Deploy to Production?', ok: 'Deploy'
+                sh 'docker tag tictactoe:${BUILD_NUMBER} tictactoe:prod'
+                sh 'docker save tictactoe:prod > tictactoe-prod.tar'
+                sh 'sudo microk8s ctr image import tictactoe-prod.tar'
+                sh 'sudo microk8s kubectl apply -f k8s/environments/prod.yaml'
+                sh 'sudo microk8s kubectl rollout restart deployment/tictactoe -n prod'
             }
         }
     }
