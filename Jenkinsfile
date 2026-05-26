@@ -16,7 +16,7 @@ pipeline {
         
         stage('Test') {
             steps {
-                sh 'echo "Tests passed!"'
+                sh 'docker run --rm tictactoe:${BUILD_NUMBER} python -m unittest test_app.py'
             }
         }
         
