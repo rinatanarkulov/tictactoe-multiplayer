@@ -1,14 +1,22 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, request, Response
 from flask_socketio import SocketIO, emit, join_room, leave_room
 import uuid
-from flask import request
-from prometheus_flask_exporter import PrometheusMetrics
+from prometheus_client import Counter, generate_latest, CONTENT_TYPE_LATEST
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your-secret-key'
 socketio = SocketIO(app, cors_allowed_origins="*")
-metrics = PrometheusMetrics(app)
-metrics.info('app_info', 'Tic-Tac-Toe Application', version='1.0')
+
+
+# Custom metrics route
+@app.route('/metrics')
+def metrics_endpoint():
+    return Response(generate_latest(), mimetype=CONTENT_TYPE_LATEST)
+
+# Track game count
+games_created = Counter('tictactoe_games_created_total', 'Total games created')
+moves_made = Counter('tictactoe_moves_made_total', 'Total moves made')
+
 
 
 # Store active games
