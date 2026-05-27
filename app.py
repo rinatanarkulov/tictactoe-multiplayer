@@ -31,6 +31,7 @@ def on_create_game():
     game_id = create_game()
     join_room(game_id)
     games[game_id]['players'].append(request.sid)
+    games_created.inc()  #  Counter for metrics
     emit('game_created', {'game_id': game_id, 'symbol': 'X'})
 
 @socketio.on('join_game')
@@ -50,6 +51,7 @@ def on_make_move(data):
     
     if game['board'][position] == '' and not game['winner']:
         game['board'][position] = game['current_turn']
+        moves_made.inc()
         winner = check_winner(game['board'])
         
         if winner:
