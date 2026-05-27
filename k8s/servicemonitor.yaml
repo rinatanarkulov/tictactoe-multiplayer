@@ -1,0 +1,20 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: tictactoe-monitor
+  namespace: observability
+  labels:
+    release: kube-prom-stack
+spec:
+  namespaceSelector:
+    matchNames:
+      - dev
+      - staging
+      - prod
+  selector:
+    matchLabels:
+      app: tictactoe
+  endpoints:
+  - port: web
+    path: /metrics
+    interval: 30s

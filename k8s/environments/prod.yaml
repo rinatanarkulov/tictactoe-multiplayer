@@ -30,6 +30,7 @@ spec:
   selector:
     app: tictactoe
   ports:
-  - port: 5000
+  - name: web
+    port: 5000
     targetPort: 5000
     nodePort: 30503
