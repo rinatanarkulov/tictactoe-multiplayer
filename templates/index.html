@@ -1,30 +1,139 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Tic-Tac-Toe v2 - Auto Deployed!</title>
+    <title>Tic-Tac-Toe Multiplayer</title>
     <style>
-        body { font-family: Arial; text-align: center; margin: 50px; }
-        #board { display: grid; grid-template-columns: repeat(3, 100px);
-                 gap: 5px; margin: 20px auto; width: 310px; }
-        .cell { width: 100px; height: 100px; border: 2px solid #333;
-                font-size: 48px; cursor: pointer; background: #f0f0f0; }
-        .cell:hover { background: #e0e0e0; }
-        button { padding: 10px 20px; font-size: 16px; margin: 10px; }
-        #status { font-size: 24px; margin: 20px; }
-        #game-id { font-size: 14px; color: #666; }
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background: #faf8ef;
+            color: #776e65;
+            text-align: center;
+            margin: 0;
+            padding: 30px 20px;
+            min-height: 100vh;
+        }
+        h1 {
+            font-size: 60px;
+            font-weight: bold;
+            color: #776e65;
+            margin: 0 0 20px 0;
+        }
+        #menu {
+            margin: 20px 0;
+        }
+        button {
+            background: #8f7a66;
+            color: #f9f6f2;
+            border: none;
+            padding: 12px 25px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+            transition: background 0.15s ease;
+        }
+        button:hover {
+            background: #9f8b77;
+        }
+        input {
+            padding: 12px;
+            font-size: 16px;
+            border: 2px solid #bbada0;
+            border-radius: 4px;
+            background: #f9f6f2;
+            color: #776e65;
+            text-transform: uppercase;
+            text-align: center;
+            font-weight: bold;
+            width: 120px;
+        }
+        #game-id {
+            font-size: 18px;
+            font-weight: bold;
+            color: #776e65;
+            margin: 10px 0;
+        }
+        #status {
+            font-size: 24px;
+            font-weight: bold;
+            margin: 20px;
+            color: #776e65;
+        }
+        #player-symbol {
+            font-size: 18px;
+            color: #8f7a66;
+            margin-bottom: 10px;
+        }
+        #board {
+            display: grid;
+            grid-template-columns: repeat(3, 100px);
+            gap: 12px;
+            margin: 20px auto;
+            width: 324px;
+            background: #bbada0;
+            padding: 12px;
+            border-radius: 8px;
+        }
+        .cell {
+            width: 100px;
+            height: 100px;
+            background: #cdc1b4;
+            border-radius: 6px;
+            font-size: 60px;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            color: #f9f6f2;
+            user-select: none;
+        }
+        .cell:hover {
+            background: #bdb09f;
+            transform: scale(1.02);
+        }
+        .cell.x {
+            background: #f67c5f;
+            animation: pop 0.2s ease;
+        }
+        .cell.o {
+            background: #f2b179;
+            animation: pop 0.2s ease;
+        }
+        .cell.filled {
+            cursor: default;
+        }
+        .cell.filled:hover {
+            transform: none;
+        }
+        @keyframes pop {
+            0% { transform: scale(0); }
+            60% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        #play-again {
+            background: #f67c5f;
+            font-size: 18px;
+            padding: 15px 30px;
+        }
+        #play-again:hover {
+            background: #ff8a6d;
+        }
     </style>
     <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
 </head>
 <body>
-    <h1>Tic-Tac-Toe Multiplayer</h1>
+    <h1>Tic-Tac-Toe</h1>
     <div id="menu">
-        <button onclick="createGame()">Create Game</button>
-        <input id="join-input" placeholder="Enter Game ID">
-        <button onclick="joinGame()">Join Game</button>
+        <button onclick="createGame()">New Game</button>
+        <input id="join-input" placeholder="CODE" maxlength="4">
+        <button onclick="joinGame()">Join</button>
     </div>
     <div id="game-id"></div>
-    <div id="status">Waiting...</div>
-    <div id="player-symbol" style="font-size: 20px; color: #333;"></div>
+    <div id="player-symbol"></div>
+    <div id="status">Create or join a game!</div>
     <button id="play-again" onclick="playAgain()" style="display:none;">Play Again</button>
     <div id="board"></div>
 
@@ -39,21 +148,23 @@
         }
 
         function joinGame() {
-            const id = document.getElementById('join-input').value;
+            const id = document.getElementById('join-input').value.toUpperCase();
             socket.emit('join_game', {game_id: id});
         }
+
         socket.on('game_created', (data) => {
-    	    gameId = data.game_id;
+            gameId = data.game_id;
             mySymbol = data.symbol;
-            document.getElementById('game-id').innerText = 'Game Code: ' + gameId + ' (Share with friend!)';
+            document.getElementById('game-id').innerText = 'Game Code: ' + gameId;
             document.getElementById('player-symbol').innerText = 'You are: ' + mySymbol;
             document.getElementById('status').innerText = 'Waiting for opponent...';
         });
+
         socket.on('game_joined', (data) => {
             mySymbol = data.symbol;
-    	    gameId = document.getElementById('join-input').value;
-    	    document.getElementById('player-symbol').innerText = 'You are: ' + mySymbol;
-	});
+            gameId = document.getElementById('join-input').value.toUpperCase();
+            document.getElementById('player-symbol').innerText = 'You are: ' + mySymbol;
+        });
 
         socket.on('start_game', () => {
             document.getElementById('status').innerText = "X's turn";
@@ -67,15 +178,24 @@
         });
 
         socket.on('game_over', (data) => {
-    	    updateBoard(data.board);
-    	    if (data.winner === 'draw') {
-            document.getElementById('status').innerText = "It's a draw!";
-    	} else {
-       	    const youWon = data.winner === mySymbol;
-            document.getElementById('status').innerText = youWon ? "You win!" : "You lose!";
-    	}
-    	    document.getElementById('play-again').style.display = 'block';
-	});
+            updateBoard(data.board);
+            if (data.winner === 'draw') {
+                document.getElementById('status').innerText = "It's a draw!";
+            } else {
+                const youWon = data.winner === mySymbol;
+                document.getElementById('status').innerText = youWon ? "You win! 🎉" : "You lose!";
+            }
+            document.getElementById('play-again').style.display = 'inline-block';
+        });
+
+        socket.on('game_reset', () => {
+            mySymbol = mySymbol === 'X' ? 'O' : 'X';
+            currentTurn = 'X';
+            document.getElementById('player-symbol').innerText = 'You are: ' + mySymbol;
+            document.getElementById('status').innerText = "X's turn";
+            document.getElementById('play-again').style.display = 'none';
+            createBoard();
+        });
 
         function createBoard() {
             const board = document.getElementById('board');
@@ -97,23 +217,17 @@
         function updateBoard(board) {
             const cells = document.querySelectorAll('.cell');
             board.forEach((val, i) => {
-                cells[i].innerText = val;
-                if (val !== '') cells[i].style.cursor = 'default';
+                if (val !== '' && cells[i].innerText === '') {
+                    cells[i].innerText = val;
+                    cells[i].classList.add(val.toLowerCase());
+                    cells[i].classList.add('filled');
+                }
             });
         }
 
-	socket.on('game_reset', () => {
-    	    mySymbol = mySymbol === 'X' ? 'O' : 'X';
-    	    currentTurn = 'X';
-    	    document.getElementById('player-symbol').innerText = 'You are: ' + mySymbol;
-    	    document.getElementById('status').innerText = "X's turn";
-    	    document.getElementById('play-again').style.display = 'none';
-    	    createBoard();
-	});
-	function playAgain() {
-    	    socket.emit('reset_game', {game_id: gameId});
-	}
+        function playAgain() {
+            socket.emit('reset_game', {game_id: gameId});
+        }
     </script>
 </body>
 </html>
-<!-- test -->
