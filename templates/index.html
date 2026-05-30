@@ -102,6 +102,9 @@
             background: #f2b179;
             animation: pop 0.2s ease;
         }
+	.cell.fading {
+            opacity: 0.4;
+        }
         .cell.filled {
             cursor: default;
         }
@@ -171,12 +174,11 @@
             createBoard();
         });
 
-        socket.on('move_made', (data) => {
-            updateBoard(data.board);
+	socket.on('move_made', (data) => {
+            updateBoard(data.board, data.removed, data.fading, data.fading_symbol);
             currentTurn = data.turn;
             document.getElementById('status').innerText = currentTurn + "'s turn";
         });
-
         socket.on('game_over', (data) => {
             updateBoard(data.board);
             if (data.winner === 'draw') {
@@ -214,15 +216,31 @@
             }
         }
 
-        function updateBoard(board) {
+        function updateBoard(board, removed, fading, fadingSymbol) {
             const cells = document.querySelectorAll('.cell');
+            
+            // Clear removed cell
+            if (removed !== null && removed !== undefined) {
+                cells[removed].innerText = '';
+                cells[removed].className = 'cell';
+            }
+            
+            // Update all cells
             board.forEach((val, i) => {
-                if (val !== '' && cells[i].innerText === '') {
+                if (val !== '' && !cells[i].classList.contains(val.toLowerCase())) {
                     cells[i].innerText = val;
                     cells[i].classList.add(val.toLowerCase());
                     cells[i].classList.add('filled');
                 }
             });
+            
+            // Remove all fading classes first
+            cells.forEach(cell => cell.classList.remove('fading'));
+            
+            // Add fading to next-to-disappear
+            if (fading !== null && fading !== undefined) {
+                cells[fading].classList.add('fading');
+            }
         }
 
         function playAgain() {

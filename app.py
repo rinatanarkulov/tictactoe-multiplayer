@@ -27,13 +27,19 @@ def index():
     return render_template('index.html')
 # WebSocket events
 @socketio.on('create_game')
-def on_create_game():
-    game_id = create_game()
-    join_room(game_id)
-    games[game_id]['players'].append(request.sid)
-    games_created.inc()  #  Counter for metrics
-    emit('game_created', {'game_id': game_id, 'symbol': 'X'})
-
+def create_game():
+    import random
+    import string
+    game_id = ''.join(random.choices(string.ascii_uppercase + string.digits, k=4))
+    games[game_id] = {
+        'board': [''] * 9,
+        'players': [],
+        'current_turn': 'X',
+        'winner': None,
+        'x_moves': [],
+        'o_moves': []
+    }
+    return game_id
 @socketio.on('join_game')
 def on_join_game(data):
     game_id = data['game_id']
@@ -50,16 +56,38 @@ def on_make_move(data):
     game = games[game_id]
     
     if game['board'][position] == '' and not game['winner']:
-        game['board'][position] = game['current_turn']
+        symbol = game['current_turn']
+        moves_key = 'x_moves' if symbol == 'X' else 'o_moves'
+        
+        # Remove oldest if player has 3 already
+        oldest_position = None
+        if len(game[moves_key]) >= 3:
+            oldest_position = game[moves_key].pop(0)
+            game['board'][oldest_position] = ''
+        
+        game['board'][position] = symbol
+        game[moves_key].append(position)
         moves_made.inc()
+        
+        # Mark which cell will disappear next
+        next_to_disappear = None
+        if len(game[moves_key]) >= 3:
+            next_to_disappear = game[moves_key][0]
+        
         winner = check_winner(game['board'])
         
         if winner:
             game['winner'] = winner
             emit('game_over', {'winner': winner, 'board': game['board']}, room=game_id)
         else:
-            game['current_turn'] = 'O' if game['current_turn'] == 'X' else 'X'
-            emit('move_made', {'board': game['board'], 'turn': game['current_turn']}, room=game_id, include_self=True)
+            game['current_turn'] = 'O' if symbol == 'X' else 'X'
+            emit('move_made', {
+                'board': game['board'],
+                'turn': game['current_turn'],
+                'removed': oldest_position,
+                'fading': next_to_disappear,
+                'fading_symbol': symbol
+            }, room=game_id, include_self=True)
 
 @socketio.on('reset_game')
 def on_reset_game(data):
