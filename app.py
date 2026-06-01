@@ -1,6 +1,3 @@
-import eventlet
-eventlet.monkey_patch()
-
 from flask import Flask, render_template, request, Response
 from flask_socketio import SocketIO, emit, join_room, leave_room
 import json
@@ -11,10 +8,10 @@ from prometheus_client import Counter, generate_latest, CONTENT_TYPE_LATEST
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your-secret-key'
-socketio = SocketIO(app, cors_allowed_origins="*", message_queue='redis://redis-service:6379')
+socketio = SocketIO(app, cors_allowed_origins="*", message_queue='redis://redis-service:6379', async_mode='threading')
 
 # Redis connection for game state
-r = redis.Redis(host='redis-service', port=6379, decode_responses=True)
+r = redis.Redis(host='redis-service', port=6379, decode_responses=True, socket_connect_timeout=5, socket_timeout=5)
 
 # Metrics
 @app.route('/metrics')
