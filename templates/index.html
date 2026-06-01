@@ -90,9 +90,11 @@
             color: #f9f6f2;
             user-select: none;
         }
-        .cell:hover {
-            background: #bdb09f;
-            transform: scale(1.02);
+	@media (hover: hover) {
+            .cell:hover {
+                background: #bdb09f;
+                transform: scale(1.02);
+            }
         }
         .cell.x {
             background: #f67c5f;
