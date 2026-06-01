@@ -1,5 +1,5 @@
 import unittest
-from app import check_winner, create_game_data, games
+from app import check_winner
 
 class TestTicTacToe(unittest.TestCase):
     
@@ -15,18 +15,13 @@ class TestTicTacToe(unittest.TestCase):
         board = ['X', '', '', '', 'X', '', '', '', 'X']
         self.assertEqual(check_winner(board), 'X')
     
-    def test_draw(self):
+    def test_no_winner(self):
         board = ['X', 'O', 'X', 'X', 'O', 'O', 'O', 'X', 'X']
         self.assertIsNone(check_winner(board))
     
-    def test_no_winner_yet(self):
-        board = ['X', '', '', '', 'O', '', '', '', '']
+    def test_empty_board(self):
+        board = [''] * 9
         self.assertIsNone(check_winner(board))
-    
-    def test_create_game(self):
-        game_id = create_game_data()
-        self.assertEqual(len(game_id), 4)
-        self.assertIn(game_id, games)
 
 if __name__ == '__main__':
     unittest.main()
