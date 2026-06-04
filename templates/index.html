@@ -164,7 +164,7 @@
     <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
 </head>
 <body>
-    <div id="loading">
+    <div id="loading" class="hidden">
         <div class="spinner"></div>
         <div class="loading-text">Connecting...</div>
     </div>
@@ -182,13 +182,22 @@
 
     <script>
         const socket = io();
+	let connectTimer = setTimeout(() => {
+            document.getElementById('loading').classList.remove('hidden');
+        }, 1000);
+        
         socket.on('connect', () => {
+            clearTimeout(connectTimer);
+            clearTimeout(reconnectTimer);
             document.getElementById('loading').classList.add('hidden');
         });
         
+        let reconnectTimer;
         socket.on('disconnect', () => {
-            document.getElementById('loading').classList.remove('hidden');
-            document.querySelector('.loading-text').innerText = 'Reconnecting...';
+            reconnectTimer = setTimeout(() => {
+                document.getElementById('loading').classList.remove('hidden');
+                document.querySelector('.loading-text').innerText = 'Reconnecting...';
+            }, 2000);
         });
 	let gameId = null;
         let mySymbol = null;
