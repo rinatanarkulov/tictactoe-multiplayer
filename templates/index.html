@@ -2,35 +2,40 @@
 <html>
 <head>
     <title>Tic-Tac-Toe Multiplayer</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <style>
+        * { box-sizing: border-box; }
         body {
             font-family: 'Helvetica Neue', Arial, sans-serif;
             background: #faf8ef;
             color: #776e65;
             text-align: center;
             margin: 0;
-            padding: 30px 20px;
+            padding: 20px 15px;
             min-height: 100vh;
         }
         h1 {
-            font-size: 60px;
+            font-size: 48px;
             font-weight: bold;
             color: #776e65;
-            margin: 0 0 20px 0;
+            margin: 0 0 15px 0;
         }
         #menu {
-            margin: 20px 0;
+            margin: 15px 0;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 8px;
         }
         button {
             background: #8f7a66;
             color: #f9f6f2;
             border: none;
-            padding: 12px 25px;
+            padding: 12px 20px;
             font-size: 16px;
             font-weight: bold;
             border-radius: 4px;
             cursor: pointer;
-            margin: 5px;
             transition: background 0.15s ease;
         }
         button:hover {
@@ -46,18 +51,30 @@
             text-transform: uppercase;
             text-align: center;
             font-weight: bold;
-            width: 120px;
+            width: 110px;
+        }
+        #game-id-wrap {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin: 10px 0;
+            flex-wrap: wrap;
         }
         #game-id {
             font-size: 18px;
             font-weight: bold;
             color: #776e65;
-            margin: 10px 0;
+        }
+        #copy-btn {
+            padding: 6px 12px;
+            font-size: 14px;
+            display: none;
         }
         #status {
-            font-size: 24px;
+            font-size: 22px;
             font-weight: bold;
-            margin: 20px;
+            margin: 15px;
             color: #776e65;
         }
         #player-symbol {
@@ -65,19 +82,19 @@
             color: #8f7a66;
             margin-bottom: 10px;
         }
-        #board {
+	#board {
+            position: relative;
             display: grid;
             grid-template-columns: repeat(3, 100px);
+            grid-template-rows: repeat(3, 100px);
             gap: 12px;
             margin: 20px auto;
-            width: 324px;
+            width: max-content;
             background: #bbada0;
             padding: 12px;
             border-radius: 8px;
         }
-        .cell {
-            width: 100px;
-            height: 100px;
+	.cell {
             background: #cdc1b4;
             border-radius: 6px;
             font-size: 60px;
@@ -90,7 +107,7 @@
             color: #f9f6f2;
             user-select: none;
         }
-	@media (hover: hover) {
+        @media (hover: hover) {
             .cell:hover {
                 background: #bdb09f;
                 transform: scale(1.02);
@@ -104,7 +121,7 @@
             background: #f2b179;
             animation: pop 0.2s ease;
         }
-	.cell.fading {
+        .cell.fading {
             opacity: 0.4;
         }
         .cell.filled {
@@ -117,6 +134,16 @@
             0% { transform: scale(0); }
             60% { transform: scale(1.1); }
             100% { transform: scale(1); }
+        }
+	#win-line {
+            position: absolute;
+            background: #776e65;
+            border-radius: 6px;
+            transform-origin: left center;
+            transform: scaleX(0);
+            transition: transform 0.4s ease;
+            z-index: 10;
+            pointer-events: none;
         }
         #play-again {
             background: #f67c5f;
@@ -136,7 +163,10 @@
         <input id="join-input" placeholder="CODE" maxlength="4">
         <button onclick="joinGame()">Join</button>
     </div>
-    <div id="game-id"></div>
+    <div id="game-id-wrap">
+        <div id="game-id"></div>
+        <button id="copy-btn" onclick="copyCode()">Copy</button>
+    </div>
     <div id="player-symbol"></div>
     <div id="status">Create or join a game!</div>
     <button id="play-again" onclick="playAgain()" style="display:none;">Play Again</button>
@@ -144,7 +174,8 @@
 
     <script>
         const socket = io();
-	let gameId = null;
+	window.addEventListener('load', () => { createBoard(); });
+        let gameId = null;
         let mySymbol = null;
         let currentTurn = 'X';
 
@@ -157,10 +188,20 @@
             socket.emit('join_game', {game_id: id});
         }
 
+        function copyCode() {
+            if (!gameId) return;
+            navigator.clipboard.writeText(gameId).then(() => {
+                const btn = document.getElementById('copy-btn');
+                btn.innerText = 'Copied!';
+                setTimeout(() => { btn.innerText = 'Copy'; }, 1500);
+            });
+        }
+
         socket.on('game_created', (data) => {
             gameId = data.game_id;
             mySymbol = data.symbol;
             document.getElementById('game-id').innerText = 'Game Code: ' + gameId;
+            document.getElementById('copy-btn').style.display = 'inline-block';
             document.getElementById('player-symbol').innerText = 'You are: ' + mySymbol;
             document.getElementById('status').innerText = 'Waiting for opponent...';
         });
@@ -176,13 +217,14 @@
             createBoard();
         });
 
-	socket.on('move_made', (data) => {
+        socket.on('move_made', (data) => {
             updateBoard(data.board, data.removed, data.fading, data.fading_symbol);
             currentTurn = data.turn;
             document.getElementById('status').innerText = currentTurn + "'s turn";
         });
         socket.on('game_over', (data) => {
             updateBoard(data.board);
+	    if (data.win_cells) drawWinLine(data.win_cells);
             if (data.winner === 'draw') {
                 document.getElementById('status').innerText = "It's a draw!";
             } else {
@@ -204,6 +246,8 @@
         function createBoard() {
             const board = document.getElementById('board');
             board.innerHTML = '';
+	    const oldLine = document.getElementById('win-line');
+            if (oldLine) oldLine.remove();
             for (let i = 0; i < 9; i++) {
                 const cell = document.createElement('div');
                 cell.className = 'cell';
@@ -220,14 +264,12 @@
 
         function updateBoard(board, removed, fading, fadingSymbol) {
             const cells = document.querySelectorAll('.cell');
-            
-            // Clear removed cell
+
             if (removed !== null && removed !== undefined) {
                 cells[removed].innerText = '';
                 cells[removed].className = 'cell';
             }
-            
-            // Update all cells
+
             board.forEach((val, i) => {
                 if (val !== '' && !cells[i].classList.contains(val.toLowerCase())) {
                     cells[i].innerText = val;
@@ -235,14 +277,39 @@
                     cells[i].classList.add('filled');
                 }
             });
-            
-            // Remove all fading classes first
+
             cells.forEach(cell => cell.classList.remove('fading'));
-            
-            // Add fading to next-to-disappear
+
             if (fading !== null && fading !== undefined) {
                 cells[fading].classList.add('fading');
             }
+        }
+
+	function drawWinLine(cells) {
+            const board = document.getElementById('board');
+            const cellEls = document.querySelectorAll('.cell');
+            const first = cellEls[cells[0]];
+            const last = cellEls[cells[2]];
+            const bRect = board.getBoundingClientRect();
+            const r1 = first.getBoundingClientRect();
+            const r2 = last.getBoundingClientRect();
+            const x1 = r1.left + r1.width/2 - bRect.left;
+            const y1 = r1.top + r1.height/2 - bRect.top;
+            const x2 = r2.left + r2.width/2 - bRect.left;
+            const y2 = r2.top + r2.height/2 - bRect.top;
+            const len = Math.hypot(x2-x1, y2-y1);
+            const angle = Math.atan2(y2-y1, x2-x1) * 180/Math.PI;
+            const line = document.createElement('div');
+            line.id = 'win-line';
+            line.style.width = len + 'px';
+            line.style.height = '8px';
+            line.style.left = x1 + 'px';
+            line.style.top = (y1 - 4) + 'px';
+            line.style.transform = 'rotate(' + angle + 'deg) scaleX(0)';
+            board.appendChild(line);
+            requestAnimationFrame(() => {
+                line.style.transform = 'rotate(' + angle + 'deg) scaleX(1)';
+            });
         }
 
         function playAgain() {
