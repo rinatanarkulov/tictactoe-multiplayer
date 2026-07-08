@@ -14,180 +14,115 @@
             padding: 20px 15px;
             min-height: 100vh;
         }
-        h1 {
-            font-size: 48px;
-            font-weight: bold;
-            color: #776e65;
-            margin: 0 0 15px 0;
-        }
-        #menu {
-            margin: 15px 0;
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 8px;
-        }
+        h1 { font-size: 44px; margin: 0 0 12px 0; }
+        #menu { margin: 12px 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
         button {
-            background: #8f7a66;
-            color: #f9f6f2;
-            border: none;
-            padding: 12px 20px;
-            font-size: 16px;
-            font-weight: bold;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: background 0.15s ease;
+            background: #8f7a66; color: #f9f6f2; border: none;
+            padding: 12px 20px; font-size: 16px; font-weight: bold;
+            border-radius: 4px; cursor: pointer; transition: background 0.15s ease;
         }
-        button:hover {
-            background: #9f8b77;
-        }
+        button:hover { background: #9f8b77; }
         input {
-            padding: 12px;
-            font-size: 16px;
-            border: 2px solid #bbada0;
-            border-radius: 4px;
-            background: #f9f6f2;
-            color: #776e65;
-            text-transform: uppercase;
-            text-align: center;
-            font-weight: bold;
-            width: 110px;
+            padding: 12px; font-size: 16px; border: 2px solid #bbada0;
+            border-radius: 4px; background: #f9f6f2; color: #776e65;
+            text-align: center; font-weight: bold; width: 130px;
         }
-        #game-id-wrap {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            margin: 10px 0;
-            flex-wrap: wrap;
+        #code-input { text-transform: uppercase; width: 110px; }
+        #matchup { font-size: 22px; font-weight: bold; margin: 8px 0; min-height: 26px; }
+        #scorebox { font-size: 20px; color: #8f7a66; margin: 4px 0 8px; min-height: 24px; }
+        #game-id-wrap { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 8px 0; flex-wrap: wrap; }
+        #game-id { font-size: 18px; font-weight: bold; }
+        #copy-btn { padding: 6px 12px; font-size: 14px; display: none; }
+        #status { font-size: 22px; font-weight: bold; margin: 12px; min-height: 26px; }
+        #player-symbol { font-size: 18px; color: #8f7a66; margin-bottom: 8px; min-height: 22px; }
+        #notice { font-size: 16px; color: #b5533f; margin: 8px 0; min-height: 20px; }
+        #board {
+            position: relative; display: grid;
+            grid-template-columns: repeat(3, 100px); grid-template-rows: repeat(3, 100px);
+            gap: 12px; margin: 20px auto; width: max-content;
+            background: #bbada0; padding: 12px; border-radius: 8px;
         }
-        #game-id {
-            font-size: 18px;
-            font-weight: bold;
-            color: #776e65;
+        .cell {
+            width: 100px; height: 100px; background: #cdc1b4; border-radius: 6px;
+            font-size: 60px; font-weight: bold; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.2s ease; color: #f9f6f2; user-select: none;
         }
-        #copy-btn {
-            padding: 6px 12px;
-            font-size: 14px;
-            display: none;
+        @media (hover: hover) { .cell:hover { background: #bdb09f; transform: scale(1.02); } }
+        .cell.x { background: #f67c5f; animation: pop 0.2s ease; }
+        .cell.o { background: #f2b179; animation: pop 0.2s ease; }
+        .cell.fading { opacity: 0.4; }
+        .cell.filled { cursor: default; }
+        .cell.filled:hover { transform: none; }
+        @keyframes pop { 0% { transform: scale(0); } 60% { transform: scale(1.1); } 100% { transform: scale(1); } }
+        #win-line {
+            position: absolute; background: #776e65; border-radius: 6px;
+            transform-origin: left center; transform: scaleX(0);
+            transition: transform 0.4s ease; z-index: 10; pointer-events: none;
         }
-        #status {
-            font-size: 22px;
-            font-weight: bold;
-            margin: 15px;
-            color: #776e65;
-        }
-        #player-symbol {
-            font-size: 18px;
-            color: #8f7a66;
-            margin-bottom: 10px;
-        }
-	#board {
-            position: relative;
-            display: grid;
-            grid-template-columns: repeat(3, 100px);
-            grid-template-rows: repeat(3, 100px);
-            gap: 12px;
-            margin: 20px auto;
-            width: max-content;
-            background: #bbada0;
-            padding: 12px;
-            border-radius: 8px;
-        }
-	.cell {
-            background: #cdc1b4;
-            border-radius: 6px;
-            font-size: 60px;
-            font-weight: bold;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s ease;
-            color: #f9f6f2;
-            user-select: none;
-        }
-        @media (hover: hover) {
-            .cell:hover {
-                background: #bdb09f;
-                transform: scale(1.02);
-            }
-        }
-        .cell.x {
-            background: #f67c5f;
-            animation: pop 0.2s ease;
-        }
-        .cell.o {
-            background: #f2b179;
-            animation: pop 0.2s ease;
-        }
-        .cell.fading {
-            opacity: 0.4;
-        }
-        .cell.filled {
-            cursor: default;
-        }
-        .cell.filled:hover {
-            transform: none;
-        }
-        @keyframes pop {
-            0% { transform: scale(0); }
-            60% { transform: scale(1.1); }
-            100% { transform: scale(1); }
-        }
-	#win-line {
-            position: absolute;
-            background: #776e65;
-            border-radius: 6px;
-            transform-origin: left center;
-            transform: scaleX(0);
-            transition: transform 0.4s ease;
-            z-index: 10;
-            pointer-events: none;
-        }
-        #play-again {
-            background: #f67c5f;
-            font-size: 18px;
-            padding: 15px 30px;
-        }
-        #play-again:hover {
-            background: #ff8a6d;
-        }
+        #play-again { background: #f67c5f; font-size: 18px; padding: 15px 30px; }
+        #play-again:hover { background: #ff8a6d; }
     </style>
     <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
 </head>
 <body>
     <h1>Tic-Tac-Toe</h1>
+
+    <div id="matchup"></div>
+    <div id="scorebox"></div>
+
     <div id="menu">
+        <input id="name-input" placeholder="Your name" maxlength="12">
         <button onclick="createGame()">New Game</button>
-        <input id="join-input" placeholder="CODE" maxlength="4">
+        <input id="code-input" placeholder="CODE" maxlength="4">
         <button onclick="joinGame()">Join</button>
     </div>
+
     <div id="game-id-wrap">
         <div id="game-id"></div>
         <button id="copy-btn" onclick="copyCode()">Copy</button>
     </div>
+
     <div id="player-symbol"></div>
     <div id="status">Create or join a game!</div>
+    <div id="notice"></div>
     <button id="play-again" onclick="playAgain()" style="display:none;">Play Again</button>
     <div id="board"></div>
 
     <script>
         const socket = io();
-	window.addEventListener('load', () => { createBoard(); });
         let gameId = null;
         let mySymbol = null;
         let currentTurn = 'X';
+        let names = {X: 'Xavier', O: 'Oliver'};
+
+        window.addEventListener('load', () => { createBoard(); });
+
+        function myName() { return document.getElementById('name-input').value.trim(); }
+
+	function updateHeader(score) {
+            const mine = mySymbol || 'X';
+            const opp = mine === 'X' ? 'O' : 'X';
+            document.getElementById('matchup').innerText = '';
+            if (score) {
+                document.getElementById('scorebox').innerText =
+                    '(' + mine + ') ' + names[mine] + ' ' + score[mine] +
+                    ' – ' + score[opp] + ' ' + names[opp] + ' (' + opp + ')';
+            }
+        }
+
+        function showMenu(show) {
+            document.getElementById('menu').style.display = show ? 'flex' : 'none';
+            document.getElementById('game-id-wrap').style.display = show ? 'flex' : 'none';
+        }
 
         function createGame() {
-            socket.emit('create_game');
+            socket.emit('create_game', {name: myName()});
         }
-
         function joinGame() {
-            const id = document.getElementById('join-input').value.toUpperCase();
-            socket.emit('join_game', {game_id: id});
+            const id = document.getElementById('code-input').value.toUpperCase();
+            socket.emit('join_game', {game_id: id, name: myName()});
         }
-
         function copyCode() {
             if (!gameId) return;
             navigator.clipboard.writeText(gameId).then(() => {
@@ -200,53 +135,71 @@
         socket.on('game_created', (data) => {
             gameId = data.game_id;
             mySymbol = data.symbol;
+            names = data.names;
             document.getElementById('game-id').innerText = 'Game Code: ' + gameId;
             document.getElementById('copy-btn').style.display = 'inline-block';
-            document.getElementById('player-symbol').innerText = 'You are: ' + mySymbol;
             document.getElementById('status').innerText = 'Waiting for opponent...';
+            document.getElementById('notice').innerText = '';
+            updateHeader(data.score);
         });
 
         socket.on('game_joined', (data) => {
             mySymbol = data.symbol;
-            gameId = document.getElementById('join-input').value.toUpperCase();
-            document.getElementById('player-symbol').innerText = 'You are: ' + mySymbol;
+            names = data.names;
+            gameId = document.getElementById('code-input').value.toUpperCase();
+            updateHeader(data.score);
         });
 
-        socket.on('start_game', () => {
-            document.getElementById('status').innerText = "X's turn";
+        socket.on('start_game', (data) => {
+            names = data.names;
+            showMenu(false);
+            document.getElementById('notice').innerText = '';
+	    document.getElementById('status').innerText = (mySymbol === 'X') ? "Your turn" : names['X'] + "'s turn";
+            updateHeader(data.score);
             createBoard();
         });
 
         socket.on('move_made', (data) => {
-            updateBoard(data.board, data.removed, data.fading, data.fading_symbol);
+            updateBoard(data.board, data.removed, data.fading);
             currentTurn = data.turn;
-            document.getElementById('status').innerText = currentTurn + "'s turn";
+	    document.getElementById('status').innerText = (currentTurn === mySymbol) ? "Your turn" : names[currentTurn] + "'s turn";
         });
+
         socket.on('game_over', (data) => {
             updateBoard(data.board);
-	    if (data.win_cells) drawWinLine(data.win_cells);
-            if (data.winner === 'draw') {
-                document.getElementById('status').innerText = "It's a draw!";
-            } else {
-                const youWon = data.winner === mySymbol;
-                document.getElementById('status').innerText = youWon ? "You win! 🎉" : "You lose!";
-            }
+            if (data.win_cells) drawWinLine(data.win_cells);
+            const youWon = data.winner === mySymbol;
+            document.getElementById('status').innerText = youWon ? "You win! 🎉" : names[data.winner] + " wins!";
+            updateHeader(data.score);
             document.getElementById('play-again').style.display = 'inline-block';
         });
 
-        socket.on('game_reset', () => {
+        socket.on('game_reset', (data) => {
             mySymbol = mySymbol === 'X' ? 'O' : 'X';
+            names = data.names;
             currentTurn = 'X';
-            document.getElementById('player-symbol').innerText = 'You are: ' + mySymbol;
-            document.getElementById('status').innerText = "X's turn";
+	    document.getElementById('status').innerText = (mySymbol === 'X') ? "Your turn" : names['X'] + "'s turn";
+            document.getElementById('notice').innerText = '';
             document.getElementById('play-again').style.display = 'none';
+            updateHeader(data.score);
             createBoard();
+        });
+
+        socket.on('opponent_left', (data) => {
+            document.getElementById('notice').innerText = data.name + ' left the game.';
+            document.getElementById('status').innerText = 'Game ended.';
+            document.getElementById('play-again').style.display = 'none';
+            showMenu(true);
+        });
+
+        socket.on('error', (data) => {
+            document.getElementById('notice').innerText = data.message;
         });
 
         function createBoard() {
             const board = document.getElementById('board');
             board.innerHTML = '';
-	    const oldLine = document.getElementById('win-line');
+            const oldLine = document.getElementById('win-line');
             if (oldLine) oldLine.remove();
             for (let i = 0; i < 9; i++) {
                 const cell = document.createElement('div');
@@ -262,14 +215,12 @@
             }
         }
 
-        function updateBoard(board, removed, fading, fadingSymbol) {
+        function updateBoard(board, removed, fading) {
             const cells = document.querySelectorAll('.cell');
-
             if (removed !== null && removed !== undefined) {
                 cells[removed].innerText = '';
                 cells[removed].className = 'cell';
             }
-
             board.forEach((val, i) => {
                 if (val !== '' && !cells[i].classList.contains(val.toLowerCase())) {
                     cells[i].innerText = val;
@@ -277,15 +228,13 @@
                     cells[i].classList.add('filled');
                 }
             });
-
             cells.forEach(cell => cell.classList.remove('fading'));
-
             if (fading !== null && fading !== undefined) {
                 cells[fading].classList.add('fading');
             }
         }
 
-	function drawWinLine(cells) {
+        function drawWinLine(cells) {
             const board = document.getElementById('board');
             const cellEls = document.querySelectorAll('.cell');
             const first = cellEls[cells[0]];
@@ -293,12 +242,16 @@
             const bRect = board.getBoundingClientRect();
             const r1 = first.getBoundingClientRect();
             const r2 = last.getBoundingClientRect();
-            const x1 = r1.left + r1.width/2 - bRect.left;
-            const y1 = r1.top + r1.height/2 - bRect.top;
+            let x1 = r1.left + r1.width/2 - bRect.left;
+            let y1 = r1.top + r1.height/2 - bRect.top;
             const x2 = r2.left + r2.width/2 - bRect.left;
             const y2 = r2.top + r2.height/2 - bRect.top;
-            const len = Math.hypot(x2-x1, y2-y1);
             const angle = Math.atan2(y2-y1, x2-x1) * 180/Math.PI;
+            const rad = angle * Math.PI/180;
+            const extend = 45;
+            const len = Math.hypot(x2-x1, y2-y1) + extend*2;
+            x1 -= Math.cos(rad)*extend;
+            y1 -= Math.sin(rad)*extend;
             const line = document.createElement('div');
             line.id = 'win-line';
             line.style.width = len + 'px';
