@@ -7,15 +7,15 @@
         * { box-sizing: border-box; }
         body {
             font-family: 'Helvetica Neue', Arial, sans-serif;
-            background: #faf8ef;
-            color: #776e65;
-            text-align: center;
-            margin: 0;
-            padding: 20px 15px;
-            min-height: 100vh;
+            background: #faf8ef; color: #776e65; text-align: center;
+            margin: 0; padding: 20px 15px; min-height: 100vh;
         }
-        h1 { font-size: 44px; margin: 0 0 12px 0; }
-        #menu { margin: 12px 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+        h1 { font-size: 40px; margin: 0 0 4px 0; }
+        #mode-title { font-size: 17px; color: #a89a8c; margin-bottom: 10px; min-height: 20px; }
+        #menu {
+            margin: 12px auto; display: flex; flex-direction: column;
+            align-items: center; gap: 10px; max-width: 260px;
+        }
         button {
             background: #8f7a66; color: #f9f6f2; border: none;
             padding: 12px 20px; font-size: 16px; font-weight: bold;
@@ -25,26 +25,33 @@
         input {
             padding: 12px; font-size: 16px; border: 2px solid #bbada0;
             border-radius: 4px; background: #f9f6f2; color: #776e65;
-            text-align: center; font-weight: bold; width: 130px;
+            text-align: center; font-weight: bold; width: 100%;
         }
-        #code-input { text-transform: uppercase; width: 110px; }
-        #matchup { font-size: 22px; font-weight: bold; margin: 8px 0; min-height: 26px; }
-        #scorebox { font-size: 20px; color: #8f7a66; margin: 4px 0 8px; min-height: 24px; }
+	input::placeholder { color: #c4b8a8; }
+        #code-input { text-transform: uppercase; }
+        .mode-label { font-size: 13px; color: #a89a8c; margin-bottom: -4px; }
+        .mode-stack { display: flex; flex-direction: column; gap: 6px; width: 100%; }
+        .mode-btn { background: #cdc1b4; color: #776e65; padding: 10px; font-size: 14px; border-radius: 4px; width: 100%; }
+        .mode-btn.active { background: #f67c5f; color: #f9f6f2; }
+        #scorebox { font-size: 20px; color: #8f7a66; margin: 4px 0 8px; min-height: 24px;}
         #game-id-wrap { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 8px 0; flex-wrap: wrap; }
         #game-id { font-size: 18px; font-weight: bold; }
         #copy-btn { padding: 6px 12px; font-size: 14px; display: none; }
         #status { font-size: 22px; font-weight: bold; margin: 12px; min-height: 26px; }
-        #player-symbol { font-size: 18px; color: #8f7a66; margin-bottom: 8px; min-height: 22px; }
         #notice { font-size: 16px; color: #b5533f; margin: 8px 0; min-height: 20px; }
+        #change-mode { background: #8f7a66; font-size: 15px; padding: 10px 20px; display: none; margin: 8px auto; }
+        #mode-dialog {
+            display: none; background: #f9f6f2; border: 2px solid #bbada0;
+            border-radius: 8px; padding: 16px; max-width: 280px; margin: 20px auto 12px;
+        }
         #board {
-            position: relative; display: grid;
-            grid-template-columns: repeat(3, 100px); grid-template-rows: repeat(3, 100px);
-            gap: 12px; margin: 20px auto; width: max-content;
-            background: #bbada0; padding: 12px; border-radius: 8px;
+            position: relative; display: grid; gap: 10px;
+            margin: 20px auto; width: max-content;
+            background: #bbada0; padding: 10px; border-radius: 8px;
         }
         .cell {
-            width: 100px; height: 100px; background: #cdc1b4; border-radius: 6px;
-            font-size: 60px; font-weight: bold; cursor: pointer;
+            background: #cdc1b4; border-radius: 6px;
+            font-weight: bold; cursor: pointer;
             display: flex; align-items: center; justify-content: center;
             transition: all 0.2s ease; color: #f9f6f2; user-select: none;
         }
@@ -61,20 +68,24 @@
             transition: transform 0.4s ease; z-index: 10; pointer-events: none;
         }
         #play-again { background: #f67c5f; font-size: 18px; padding: 15px 30px; }
-        #play-again:hover { background: #ff8a6d; }
     </style>
     <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
 </head>
 <body>
     <h1>Tic-Tac-Toe</h1>
-
-    <div id="matchup"></div>
+    <div id="mode-title"></div>
     <div id="scorebox"></div>
 
     <div id="menu">
         <input id="name-input" placeholder="Your name" maxlength="12">
+        <div class="mode-label">Mode</div>
+        <div class="mode-stack" id="mode-stack">
+            <button class="mode-btn" data-mode="3-classic" onclick="setMode('3-classic')">3x3 Classic</button>
+            <button class="mode-btn active" data-mode="3-infinite" onclick="setMode('3-infinite')">3x3 Infinite</button>
+            <button class="mode-btn" data-mode="4-infinite" onclick="setMode('4-infinite')">4x4 Infinite</button>
+        </div>
         <button onclick="createGame()">New Game</button>
-        <input id="code-input" placeholder="CODE" maxlength="4">
+        <input id="code-input" placeholder="ENTER CODE" maxlength="4">
         <button onclick="joinGame()">Join</button>
     </div>
 
@@ -83,42 +94,57 @@
         <button id="copy-btn" onclick="copyCode()">Copy</button>
     </div>
 
-    <div id="player-symbol"></div>
     <div id="status">Create or join a game!</div>
     <div id="notice"></div>
+    <div id="mode-dialog"></div>
+
     <button id="play-again" onclick="playAgain()" style="display:none;">Play Again</button>
+    <button id="change-mode" onclick="openModeChange()">Change game mode</button>
     <div id="board"></div>
 
     <script>
         const socket = io();
-        let gameId = null;
-        let mySymbol = null;
-        let currentTurn = 'X';
-        let names = {X: 'Xavier', O: 'Oliver'};
+        let gameId = null, mySymbol = null, currentTurn = 'X';
+        let names = {X: "X-avier", O: "O-liver"};
+        let modeKey = '3-infinite';
 
-        window.addEventListener('load', () => { createBoard(); });
+        const MODE_INFO = {
+            '3-classic':  {size: 3, label: '3x3 Classic'},
+            '3-infinite': {size: 3, label: '3x3 Infinite'},
+            '4-infinite': {size: 4, label: '4x4 Infinite'}
+        };
+
+        window.addEventListener('load', () => renderBoard());
 
         function myName() { return document.getElementById('name-input').value.trim(); }
 
-	function updateHeader(score) {
-            const mine = mySymbol || 'X';
-            const opp = mine === 'X' ? 'O' : 'X';
-            document.getElementById('matchup').innerText = '';
+        function setMode(k) {
+            modeKey = k;
+            document.querySelectorAll('#mode-stack .mode-btn').forEach(b =>
+                b.classList.toggle('active', b.dataset.mode === k));
+        }
+
+        function updateScore(score) {
+            const mine = mySymbol || 'X', opp = mine === 'X' ? 'O' : 'X';
             if (score) {
-                document.getElementById('scorebox').innerText =
-                    '(' + mine + ') ' + names[mine] + ' ' + score[mine] +
-                    ' – ' + score[opp] + ' ' + names[opp] + ' (' + opp + ')';
+		document.getElementById('scorebox').innerHTML =
+                    '(' + mine + ') ' + names[mine] + ' <b>' + score[mine] +
+                    '</b> – <b>' + score[opp] + '</b> ' + names[opp] + ' (' + opp + ')';
             }
+        }
+
+        function updateTitle() {
+            document.getElementById('mode-title').innerText = MODE_INFO[modeKey].label;
         }
 
         function showMenu(show) {
             document.getElementById('menu').style.display = show ? 'flex' : 'none';
             document.getElementById('game-id-wrap').style.display = show ? 'flex' : 'none';
+            document.getElementById('change-mode').style.display = show ? 'none' : 'block';
+            document.getElementById('mode-title').style.display = show ? 'none' : 'block';
         }
 
-        function createGame() {
-            socket.emit('create_game', {name: myName()});
-        }
+        function createGame() { socket.emit('create_game', {name: myName(), mode_key: modeKey}); }
         function joinGame() {
             const id = document.getElementById('code-input').value.toUpperCase();
             socket.emit('join_game', {game_id: id, name: myName()});
@@ -126,148 +152,194 @@
         function copyCode() {
             if (!gameId) return;
             navigator.clipboard.writeText(gameId).then(() => {
-                const btn = document.getElementById('copy-btn');
-                btn.innerText = 'Copied!';
-                setTimeout(() => { btn.innerText = 'Copy'; }, 1500);
+                const b = document.getElementById('copy-btn');
+                b.innerText = 'Copied!'; setTimeout(() => b.innerText = 'Copy', 1500);
             });
         }
 
-        socket.on('game_created', (data) => {
-            gameId = data.game_id;
-            mySymbol = data.symbol;
-            names = data.names;
+        socket.on('game_created', (d) => {
+            gameId = d.game_id; mySymbol = d.symbol; names = d.names; modeKey = d.mode_key;
             document.getElementById('game-id').innerText = 'Game Code: ' + gameId;
             document.getElementById('copy-btn').style.display = 'inline-block';
             document.getElementById('status').innerText = 'Waiting for opponent...';
             document.getElementById('notice').innerText = '';
-            updateHeader(data.score);
+            updateTitle();
         });
-
-        socket.on('game_joined', (data) => {
-            mySymbol = data.symbol;
-            names = data.names;
+        socket.on('game_joined', (d) => {
+            mySymbol = d.symbol; names = d.names; modeKey = d.mode_key;
             gameId = document.getElementById('code-input').value.toUpperCase();
-            updateHeader(data.score);
+            updateTitle();
         });
-
-        socket.on('start_game', (data) => {
-            names = data.names;
+        socket.on('start_game', (d) => {
+            names = d.names; modeKey = d.mode_key; currentTurn = 'X';
             showMenu(false);
             document.getElementById('notice').innerText = '';
-	    document.getElementById('status').innerText = (mySymbol === 'X') ? "Your turn" : names['X'] + "'s turn";
-            updateHeader(data.score);
-            createBoard();
+            document.getElementById('status').innerText = (mySymbol === 'X') ? "Your turn" : names['X'] + "'s turn";
+            updateScore(d.score); updateTitle(); renderBoard();
         });
-
-        socket.on('move_made', (data) => {
-            updateBoard(data.board, data.removed, data.fading);
-            currentTurn = data.turn;
-	    document.getElementById('status').innerText = (currentTurn === mySymbol) ? "Your turn" : names[currentTurn] + "'s turn";
+        socket.on('move_made', (d) => {
+            updateBoard(d.board, d.removed, d.fading);
+            currentTurn = d.turn;
+            document.getElementById('status').innerText = (currentTurn === mySymbol) ? "Your turn" : names[currentTurn] + "'s turn";
         });
-
-        socket.on('game_over', (data) => {
-            updateBoard(data.board);
-            if (data.win_cells) drawWinLine(data.win_cells);
-            const youWon = data.winner === mySymbol;
-            document.getElementById('status').innerText = youWon ? "You win! 🎉" : names[data.winner] + " wins!";
-            updateHeader(data.score);
+        socket.on('game_over', (d) => {
+            updateBoard(d.board);
+            if (d.win_cells) drawWinLine(d.win_cells);
+            if (d.winner === 'draw') document.getElementById('status').innerText = "It's a draw!";
+            else document.getElementById('status').innerText = (d.winner === mySymbol) ? "You win! 🎉" : names[d.winner] + " wins!";
+            updateScore(d.score);
             document.getElementById('play-again').style.display = 'inline-block';
         });
-
-        socket.on('game_reset', (data) => {
+        socket.on('game_reset', (d) => {
             mySymbol = mySymbol === 'X' ? 'O' : 'X';
-            names = data.names;
-            currentTurn = 'X';
-	    document.getElementById('status').innerText = (mySymbol === 'X') ? "Your turn" : names['X'] + "'s turn";
+            names = d.names; modeKey = d.mode_key; currentTurn = 'X';
+            document.getElementById('status').innerText = (mySymbol === 'X') ? "Your turn" : names['X'] + "'s turn";
             document.getElementById('notice').innerText = '';
             document.getElementById('play-again').style.display = 'none';
-            updateHeader(data.score);
-            createBoard();
+            updateScore(d.score); updateTitle(); renderBoard();
         });
 
-        socket.on('opponent_left', (data) => {
-            document.getElementById('notice').innerText = data.name + ' left the game.';
+	socket.on('opponent_left', (d) => {
+            document.getElementById('notice').innerText = d.name + ' left the game.';
             document.getElementById('status').innerText = 'Game ended.';
             document.getElementById('play-again').style.display = 'none';
+            gameId = null; mySymbol = null; currentTurn = 'X';
+            document.getElementById('change-mode').disabled = false;
+            document.getElementById('change-mode').style.opacity = '1';
+            document.getElementById('scorebox').innerText = '';
             showMenu(true);
         });
+        socket.on('error', (d) => { document.getElementById('notice').innerText = d.message; });
 
-        socket.on('error', (data) => {
-            document.getElementById('notice').innerText = data.message;
+	function openModeChange() {
+            socket.emit('open_mode_change', {game_id: gameId});
+            const dlg = document.getElementById('mode-dialog');
+            dlg.style.display = 'block';
+            cmMode = '3-infinite';
+            dlg.innerHTML =
+                '<div class="mode-label" style="margin:0 0 8px;">Pick new mode</div>' +
+                '<div class="mode-stack">' +
+                '<button class="mode-btn" id="cm-3c">3x3 Classic</button>' +
+                '<button class="mode-btn active" id="cm-3i">3x3 Infinite</button>' +
+                '<button class="mode-btn" id="cm-4i">4x4 Infinite</button>' +
+                '</div>' +
+                '<button onclick="sendModeRequest()" style="margin-top:10px;">Send request</button>' +
+                '<button onclick="closeDialog(true)" style="margin-top:6px;background:#cdc1b4;">Cancel</button>';
+            document.getElementById('cm-3c').onclick = () => pickCM('3-classic', 'cm-3c');
+            document.getElementById('cm-3i').onclick = () => pickCM('3-infinite', 'cm-3i');
+            document.getElementById('cm-4i').onclick = () => pickCM('4-infinite', 'cm-4i');
+        }
+        let cmMode = '3-infinite';
+        function pickCM(k, id) {
+            cmMode = k;
+            ['cm-3c','cm-3i','cm-4i'].forEach(i => document.getElementById(i).classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+        }
+	function closeDialog(sendCancel) {
+            document.getElementById('mode-dialog').style.display = 'none';
+            if (sendCancel) socket.emit('cancel_mode_change', {game_id: gameId});
+        }
+        function sendModeRequest() {
+            socket.emit('request_mode_change', {game_id: gameId, mode_key: cmMode});
+            closeDialog();
+            document.getElementById('notice').innerText = 'Mode change request sent...';
+        }
+        socket.on('mode_change_requested', (d) => {
+            const dlg = document.getElementById('mode-dialog');
+            dlg.style.display = 'block';
+            dlg.innerHTML = '<div style="margin-bottom:10px;">' + d.by + ' wants to switch to:<br><b>' + MODE_INFO[d.mode_key].label + '</b></div>' +
+                '<button onclick="respondMode(true)">Accept</button>' +
+                '<button onclick="respondMode(false)" style="margin-top:6px;background:#cdc1b4;">Decline</button>';
+        });
+        function respondMode(ok) {
+            socket.emit('respond_mode_change', {game_id: gameId, accepted: ok});
+            closeDialog();
+        }
+        socket.on('mode_changed', (d) => {
+            modeKey = d.mode_key; names = d.names; currentTurn = 'X';
+            closeDialog();
+	    document.getElementById('change-mode').disabled = false;
+            document.getElementById('change-mode').style.opacity = '1';
+            document.getElementById('notice').innerText = 'Mode changed!';
+            document.getElementById('play-again').style.display = 'none';
+            document.getElementById('status').innerText = (mySymbol === 'X') ? "Your turn" : names['X'] + "'s turn";
+            updateScore(d.score); updateTitle(); renderBoard();
+        });
+        socket.on('mode_change_declined', () => {
+            document.getElementById('notice').innerText = 'Mode change declined.';
         });
 
-        function createBoard() {
+	socket.on('mode_locked', (d) => {
+            const btn = document.getElementById('change-mode');
+            btn.disabled = true;
+            btn.style.opacity = '0.5';
+            document.getElementById('notice').innerText = d.by + " is choosing a mode...";
+        });
+        socket.on('mode_unlocked', () => {
+            const btn = document.getElementById('change-mode');
+            btn.disabled = false;
+            btn.style.opacity = '1';
+            document.getElementById('notice').innerText = '';
+        });
+
+        function renderBoard() {
+            const size = MODE_INFO[modeKey].size;
+            const cellPx = size === 3 ? 90 : Math.min(70, Math.floor((Math.min(window.innerWidth, 360) - 60) / 4));
+            const font = Math.floor(cellPx * 0.6);
             const board = document.getElementById('board');
+            board.style.gridTemplateColumns = 'repeat(' + size + ', ' + cellPx + 'px)';
+            board.style.gridTemplateRows = 'repeat(' + size + ', ' + cellPx + 'px)';
             board.innerHTML = '';
             const oldLine = document.getElementById('win-line');
             if (oldLine) oldLine.remove();
-            for (let i = 0; i < 9; i++) {
+            for (let i = 0; i < size * size; i++) {
                 const cell = document.createElement('div');
                 cell.className = 'cell';
+                cell.style.width = cellPx + 'px';
+                cell.style.height = cellPx + 'px';
+                cell.style.fontSize = font + 'px';
                 cell.onclick = () => makeMove(i);
                 board.appendChild(cell);
             }
         }
-
-        function makeMove(position) {
-            if (currentTurn === mySymbol) {
-                socket.emit('make_move', {game_id: gameId, position: position});
-            }
+        function makeMove(pos) {
+            if (currentTurn === mySymbol) socket.emit('make_move', {game_id: gameId, position: pos});
         }
-
         function updateBoard(board, removed, fading) {
             const cells = document.querySelectorAll('.cell');
             if (removed !== null && removed !== undefined) {
-                cells[removed].innerText = '';
-                cells[removed].className = 'cell';
+                cells[removed].innerText = ''; cells[removed].classList.remove('x','o','filled');
             }
             board.forEach((val, i) => {
                 if (val !== '' && !cells[i].classList.contains(val.toLowerCase())) {
                     cells[i].innerText = val;
-                    cells[i].classList.add(val.toLowerCase());
-                    cells[i].classList.add('filled');
+                    cells[i].classList.add(val.toLowerCase(), 'filled');
                 }
             });
-            cells.forEach(cell => cell.classList.remove('fading'));
-            if (fading !== null && fading !== undefined) {
-                cells[fading].classList.add('fading');
-            }
+            cells.forEach(c => c.classList.remove('fading'));
+            if (fading !== null && fading !== undefined) cells[fading].classList.add('fading');
         }
-
         function drawWinLine(cells) {
             const board = document.getElementById('board');
             const cellEls = document.querySelectorAll('.cell');
-            const first = cellEls[cells[0]];
-            const last = cellEls[cells[2]];
+            const first = cellEls[cells[0]], last = cellEls[cells[cells.length-1]];
             const bRect = board.getBoundingClientRect();
-            const r1 = first.getBoundingClientRect();
-            const r2 = last.getBoundingClientRect();
-            let x1 = r1.left + r1.width/2 - bRect.left;
-            let y1 = r1.top + r1.height/2 - bRect.top;
-            const x2 = r2.left + r2.width/2 - bRect.left;
-            const y2 = r2.top + r2.height/2 - bRect.top;
+            const r1 = first.getBoundingClientRect(), r2 = last.getBoundingClientRect();
+            let x1 = r1.left + r1.width/2 - bRect.left, y1 = r1.top + r1.height/2 - bRect.top;
+            const x2 = r2.left + r2.width/2 - bRect.left, y2 = r2.top + r2.height/2 - bRect.top;
             const angle = Math.atan2(y2-y1, x2-x1) * 180/Math.PI;
-            const rad = angle * Math.PI/180;
-            const extend = 45;
+            const rad = angle * Math.PI/180, extend = 40;
             const len = Math.hypot(x2-x1, y2-y1) + extend*2;
-            x1 -= Math.cos(rad)*extend;
-            y1 -= Math.sin(rad)*extend;
+            x1 -= Math.cos(rad)*extend; y1 -= Math.sin(rad)*extend;
             const line = document.createElement('div');
             line.id = 'win-line';
-            line.style.width = len + 'px';
-            line.style.height = '8px';
-            line.style.left = x1 + 'px';
-            line.style.top = (y1 - 4) + 'px';
+            line.style.width = len + 'px'; line.style.height = '8px';
+            line.style.left = x1 + 'px'; line.style.top = (y1 - 4) + 'px';
             line.style.transform = 'rotate(' + angle + 'deg) scaleX(0)';
             board.appendChild(line);
-            requestAnimationFrame(() => {
-                line.style.transform = 'rotate(' + angle + 'deg) scaleX(1)';
-            });
+            requestAnimationFrame(() => line.style.transform = 'rotate(' + angle + 'deg) scaleX(1)');
         }
-
-        function playAgain() {
-            socket.emit('reset_game', {game_id: gameId});
-        }
+        function playAgain() { socket.emit('reset_game', {game_id: gameId}); }
     </script>
 </body>
 </html>
